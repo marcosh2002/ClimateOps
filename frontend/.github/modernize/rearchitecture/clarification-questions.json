@@ -1,0 +1,405 @@
+{
+  "schema": "clarification-questions/v1",
+  "generated_at": "2026-10-05T12:56:00Z",
+  "user_input": "The UI looks really awful I need the UI and UX more good minimalistic saas like grids colour combos , framer animations with rivers trees . the existing UI and UX is very poor can you make it good and improved?",
+  "title": "Climate SaaS UI and UX Redesign",
+  "assessment_snapshot": {
+    "intro": "The existing frontend is a Next.js and React climate-risk SaaS with Tailwind styling, Framer Motion, and several dashboard workflows:",
+    "bullets": [
+      "Next.js 14 App Router and React 18 are already in use",
+      "Tailwind CSS theme tokens and custom UI components exist",
+      "Framer Motion is already installed; the product has climate, simulation, and emergency views",
+      "No screenshot or reference design was attached"
+    ]
+  },
+  "proposed_outcome": "Polish the existing frontend in place into a coherent, minimal climate-intelligence SaaS experience with clear grids, thoughtful color combinations, subtle Framer Motion, and tasteful river-and-tree motifs. Preserve existing routes, data behavior, and product workflows while improving visual hierarchy, responsive behavior, and accessibility.",
+  "scope": [
+    "frontend",
+    "generic"
+  ],
+  "status": "answered",
+  "questions": [
+    {
+      "id": "F1",
+      "kit": "frontend",
+      "field": "target.framework",
+      "title": "Frontend framework",
+      "question": "Should the redesign stay on the current Next.js 14 App Router and React 18 stack?",
+      "importance": "required",
+      "impact": 5,
+      "recommended": "Keep Next.js 14 App Router and React 18",
+      "default": null,
+      "prefilled": true,
+      "prefilled_value": "Keep Next.js 14 App Router and React 18",
+      "answer": {
+        "value": "if possible just keep react for simplicity I donr want next",
+        "source": "user"
+      },
+      "depends_on": null,
+      "options": [
+        {
+          "value": "Keep Next.js 14 App Router and React 18",
+          "label": "Keep Next.js 14 App Router and React 18"
+        },
+        {
+          "value": "Upgrade Next.js and React as part of the redesign",
+          "label": "Upgrade Next.js and React as part of the redesign"
+        }
+      ],
+      "allow_other": true,
+      "type": "single_select"
+    },
+    {
+      "id": "F2",
+      "kit": "frontend",
+      "field": "target.component_library",
+      "title": "UI component approach",
+      "question": "Which component approach should the redesign use?",
+      "importance": "required",
+      "impact": 5,
+      "recommended": "Improve the existing Tailwind-based custom UI components",
+      "default": null,
+      "prefilled": false,
+      "prefilled_value": null,
+      "answer": {
+        "value": "Improve the existing Tailwind-based custom UI components",
+        "source": "user"
+      },
+      "depends_on": null,
+      "options": [
+        {
+          "value": "Improve the existing Tailwind-based custom UI components",
+          "label": "Improve the existing Tailwind-based custom UI components"
+        },
+        {
+          "value": "Adopt shadcn/ui",
+          "label": "Adopt shadcn/ui"
+        },
+        {
+          "value": "Adopt another component library",
+          "label": "Adopt another component library"
+        }
+      ],
+      "allow_other": true,
+      "type": "single_select"
+    },
+    {
+      "id": "F3",
+      "kit": "frontend",
+      "field": "visual.screenshots",
+      "title": "Visual references",
+      "question": "Can you provide screenshots, a screen recording, or a reference URL that shows what should be improved or the visual direction you like?",
+      "importance": "required",
+      "impact": 5,
+      "recommended": null,
+      "default": null,
+      "prefilled": false,
+      "prefilled_value": null,
+      "answer": {
+        "value": "Use your own creativity you are also senior UI engineer",
+        "source": "user"
+      },
+      "depends_on": null,
+      "type": "text",
+      "options": []
+    },
+    {
+      "id": "F4",
+      "kit": "frontend",
+      "field": "visual.design_system",
+      "title": "Design token source",
+      "question": "Should the redesign extend the existing Tailwind theme and CSS variables, or should it introduce a different design system?",
+      "importance": "required",
+      "impact": 5,
+      "recommended": "Extend the current Tailwind theme and CSS variables",
+      "default": null,
+      "prefilled": true,
+      "prefilled_value": "Extend the current Tailwind theme and CSS variables (tailwind.config.ts and src/styles/globals.css)",
+      "answer": {
+        "value": "Extend the current Tailwind theme and CSS variables",
+        "source": "user"
+      },
+      "depends_on": null,
+      "options": [
+        {
+          "value": "Extend the current Tailwind theme and CSS variables",
+          "label": "Extend the current Tailwind theme and CSS variables"
+        },
+        {
+          "value": "Replace the current tokens with a new design system",
+          "label": "Replace the current tokens with a new design system"
+        }
+      ],
+      "allow_other": true,
+      "type": "single_select"
+    },
+    {
+      "id": "F5",
+      "kit": "frontend",
+      "field": "compliance.accessibility",
+      "title": "Accessibility target",
+      "question": "What accessibility standard should the redesigned UI meet?",
+      "importance": "recommended",
+      "impact": 3,
+      "recommended": "WCAG 2.1 AA",
+      "default": "WCAG 2.1 AA",
+      "prefilled": false,
+      "prefilled_value": null,
+      "answer": {
+        "value": "WCAG 2.1 AA",
+        "source": "user"
+      },
+      "depends_on": null,
+      "options": [
+        {
+          "value": "WCAG 2.1 AA",
+          "label": "WCAG 2.1 AA"
+        },
+        {
+          "value": "WCAG 2.2 AA",
+          "label": "WCAG 2.2 AA"
+        },
+        {
+          "value": "No formal standard",
+          "label": "No formal standard"
+        }
+      ],
+      "allow_other": true,
+      "type": "single_select"
+    },
+    {
+      "id": "F6",
+      "kit": "frontend",
+      "field": "compatibility.browsers",
+      "title": "Browser support",
+      "question": "Which browsers should the redesigned interface support?",
+      "importance": "recommended",
+      "impact": 2,
+      "recommended": "Modern evergreen browsers (latest two versions)",
+      "default": "Modern evergreen browsers (Chrome, Firefox, Safari, Edge — latest 2 major versions)",
+      "prefilled": false,
+      "prefilled_value": null,
+      "answer": {
+        "value": "Modern evergreen browsers (latest two versions)",
+        "source": "user"
+      },
+      "depends_on": null,
+      "options": [
+        {
+          "value": "Modern evergreen browsers (latest two versions)",
+          "label": "Modern evergreen browsers (latest two versions)"
+        },
+        {
+          "value": "Specify browser versions",
+          "label": "Specify browser versions"
+        }
+      ],
+      "allow_other": true,
+      "type": "single_select"
+    },
+    {
+      "id": "F7",
+      "kit": "frontend",
+      "field": "responsive.breakpoints",
+      "title": "Responsive strategy",
+      "question": "How should the redesigned layouts adapt across screen sizes?",
+      "importance": "recommended",
+      "impact": 3,
+      "recommended": "Mobile-first responsive layouts using current breakpoints",
+      "default": "mobile-first using existing breakpoints detected from codebase",
+      "prefilled": true,
+      "prefilled_value": "Use existing Tailwind breakpoints with mobile-first responsive layouts",
+      "answer": {
+        "value": "Use existing Tailwind breakpoints with mobile-first responsive layouts",
+        "source": "user"
+      },
+      "depends_on": null,
+      "options": [
+        {
+          "value": "Mobile-first responsive layouts using current breakpoints",
+          "label": "Mobile-first responsive layouts using current breakpoints"
+        },
+        {
+          "value": "Desktop-focused; mobile is out of scope",
+          "label": "Desktop-focused; mobile is out of scope"
+        }
+      ],
+      "allow_other": true,
+      "type": "single_select"
+    },
+    {
+      "id": "F8",
+      "kit": "frontend",
+      "field": "i18n.locales",
+      "title": "Locales",
+      "question": "Which locales are in scope for this UI redesign?",
+      "importance": "optional",
+      "impact": 1,
+      "recommended": null,
+      "default": "preserve current locales; keep existing i18n library if present",
+      "prefilled": false,
+      "prefilled_value": null,
+      "answer": {
+        "value": "preserve current locales; keep existing i18n library if present",
+        "source": "default"
+      },
+      "depends_on": null,
+      "type": "text",
+      "options": []
+    },
+    {
+      "id": "F9",
+      "kit": "frontend",
+      "field": "state_mgmt.preference",
+      "title": "State management",
+      "question": "Should the redesign preserve the existing client/server state management approach?",
+      "importance": "optional",
+      "impact": 2,
+      "recommended": "Preserve Zustand and TanStack Query",
+      "default": "preserve existing pattern if identifiable; otherwise recommend minimal (component state + server-state library)",
+      "prefilled": true,
+      "prefilled_value": "Preserve existing Zustand and TanStack Query dependencies",
+      "answer": {
+        "value": "Preserve Zustand and TanStack Query",
+        "source": "user"
+      },
+      "depends_on": null,
+      "options": [
+        {
+          "value": "Preserve Zustand and TanStack Query",
+          "label": "Preserve Zustand and TanStack Query"
+        },
+        {
+          "value": "Change the state management approach",
+          "label": "Change the state management approach"
+        }
+      ],
+      "allow_other": true,
+      "type": "single_select"
+    },
+    {
+      "id": "F10",
+      "kit": "frontend",
+      "field": "routing.preference",
+      "title": "Routing strategy",
+      "question": "Should the redesign preserve the current Next.js App Router routes and URLs?",
+      "importance": "optional",
+      "impact": 2,
+      "recommended": "Preserve the current Next.js App Router routes and URLs",
+      "default": "use the de-facto router for the chosen target framework",
+      "prefilled": true,
+      "prefilled_value": "Preserve Next.js App Router routes",
+      "answer": {
+        "value": "Preserve Next.js App Router routes",
+        "source": "user"
+      },
+      "depends_on": null,
+      "options": [
+        {
+          "value": "Preserve the current Next.js App Router routes and URLs",
+          "label": "Preserve the current Next.js App Router routes and URLs"
+        },
+        {
+          "value": "Change routing as part of the redesign",
+          "label": "Change routing as part of the redesign"
+        }
+      ],
+      "allow_other": true,
+      "type": "single_select"
+    },
+    {
+      "id": "G1",
+      "kit": "generic",
+      "field": "success.definition",
+      "title": "Definition of done",
+      "question": "What should be true for you to consider the redesign successful?",
+      "importance": "required",
+      "impact": 5,
+      "recommended": null,
+      "default": "feature parity with the current system; all existing user-facing behaviors preserved",
+      "prefilled": true,
+      "prefilled_value": "A cohesive, minimal climate SaaS visual design with improved grids, colors, subtle nature-inspired animation, and all existing user-facing flows preserved",
+      "answer": {
+        "value": "A cohesive, minimal climate SaaS visual design with improved grids, colors, subtle nature-inspired animation, and all existing user-facing flows preserved.",
+        "source": "user"
+      },
+      "depends_on": null,
+      "type": "text",
+      "options": []
+    },
+    {
+      "id": "G2",
+      "kit": "generic",
+      "field": "out_of_scope",
+      "title": "Out-of-scope areas",
+      "question": "Are there any pages, workflows, or technologies that must not be changed?",
+      "importance": "recommended",
+      "impact": 3,
+      "recommended": null,
+      "default": "no explicit exclusions; agent will infer from project structure",
+      "prefilled": false,
+      "prefilled_value": null,
+      "answer": {
+        "value": "no explicit exclusions; agent will infer from project structure",
+        "source": "default"
+      },
+      "depends_on": null,
+      "type": "text",
+      "options": []
+    },
+    {
+      "id": "G3",
+      "kit": "generic",
+      "field": "existing_tests.posture",
+      "title": "Test expectations",
+      "question": "How should existing tests be handled during the redesign?",
+      "importance": "recommended",
+      "impact": 3,
+      "recommended": "All existing tests must pass",
+      "default": "must pass",
+      "prefilled": false,
+      "prefilled_value": null,
+      "answer": {
+        "value": "All existing tests must pass",
+        "source": "user"
+      },
+      "depends_on": null,
+      "options": [
+        {
+          "value": "All existing tests must pass",
+          "label": "All existing tests must pass"
+        },
+        {
+          "value": "Tests can be rewritten with equivalent coverage",
+          "label": "Tests can be rewritten with equivalent coverage"
+        },
+        {
+          "value": "Existing tests may be ignored; add new coverage",
+          "label": "Existing tests may be ignored; add new coverage"
+        }
+      ],
+      "allow_other": true,
+      "type": "single_select"
+    },
+    {
+      "id": "G5",
+      "kit": "generic",
+      "field": "constraints.additional",
+      "title": "Additional constraints",
+      "question": "Add any additional requirements, constraints, or design preferences not covered above.",
+      "importance": "optional",
+      "impact": 1,
+      "recommended": null,
+      "default": "None beyond the decisions listed in this specification.",
+      "prefilled": true,
+      "prefilled_value": "None beyond the decisions listed in this specification.",
+      "answer": {
+        "value": "None beyond the decisions listed in this specification.",
+        "source": "user"
+      },
+      "depends_on": null,
+      "type": "text",
+      "options": []
+    }
+  ]
+}

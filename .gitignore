@@ -1,0 +1,19 @@
+# Frontend
+frontend/node_modules/
+frontend/.next/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Build
+dist/
+build/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
