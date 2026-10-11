@@ -1,9 +1,40 @@
-# AWS Deployment Guide
+# ClimateOps AWS EC2 Deployment Runbook
 
-This guide deploys the ClimateOps Next.js frontend and FastAPI backend to an
-Amazon EC2 instance with Nginx as the public reverse proxy. It is written for
-the current repository layout and supports REST, WebSocket, and Server-Sent
-Events (SSE) traffic.
+This is the project-specific AWS deployment runbook for ClimateOps. It
+deploys the Next.js frontend and FastAPI backend to Amazon EC2 with Nginx as
+the public reverse proxy. It covers the complete integration path for REST,
+WebSocket, and Server-Sent Events (SSE) traffic.
+
+Use this document for:
+
+- Initial EC2 provisioning.
+- Production configuration.
+- Releases from an approved Git commit.
+- Health checks and frontend/backend integration checks.
+- Rollback, operations, and incident response.
+
+This document contains placeholders intentionally. Replace them with the
+actual AWS Region, hostname, account ID, and approved provider settings in
+the deployment environment; never commit secret values to this repository.
+
+## Deployment Contract
+
+The following values are the fixed contract between the current application
+and AWS:
+
+| Component | Production value | Reason |
+|---|---|---|
+| Public application | `https://<public-hostname>` | Browser entry point |
+| REST base | `https://<public-hostname>` | Frontend appends `/api/...` |
+| WebSocket base | `wss://<public-hostname>` | Frontend appends `/api/monitoring/ws/incidents` |
+| Nginx | `80` and `443` | Public HTTP/HTTPS |
+| Next.js | `127.0.0.1:3000` | Private frontend upstream |
+| FastAPI | `127.0.0.1:8000` | Private API upstream |
+| Redis | `127.0.0.1:6379` | Private cache/worker dependency |
+| Database | AWS DynamoDB | Production persistence |
+
+Ports 3000, 8000, and 6379 must never be exposed through the EC2 security
+group. Nginx is the only public application entry point.
 
 ## 1. Deployment Topology
 
@@ -24,10 +55,11 @@ FastAPI on EC2
    `-- External climate and AI providers
 ```
 
-This is a practical single-instance deployment for a small environment. For
-high availability, run the frontend and backend on separate instances or
-containers behind an Application Load Balancer, use ElastiCache for Redis, and
-use a managed deployment pipeline.
+This runbook describes a single-EC2 deployment, which is appropriate for the
+current project and a small production workload. It is not highly available:
+an EC2 failure interrupts both frontend and backend service. A later
+high-availability architecture can use an Application Load Balancer, separate
+ECS/EC2 services, ElastiCache for Redis, and a managed deployment pipeline.
 
 ## 2. Current Repository Assumptions
 
@@ -53,7 +85,7 @@ Do not use the development `backend/docker-compose.yml` as the production
 deployment. It starts local DynamoDB, enables reload, publishes internal
 ports, and is intended for development.
 
-## 3. AWS Resources
+## 3. AWS Resources and Ownership
 
 ### Required
 
@@ -63,6 +95,21 @@ ports, and is intended for development.
 - A DynamoDB table set in the same AWS Region as the EC2 instance.
 - An IAM instance profile attached to EC2.
 - A security group.
+
+Record ownership before deployment:
+
+```text
+AWS account:              <account-id>
+AWS Region:               <region>
+Application owner:        <name/team>
+Operations contact:       <email/on-call>
+DNS owner:                <name/team>
+Data owner:               <name/team>
+Recovery decision-maker:  <name/team>
+```
+
+The owner is responsible for provider renewals, AWS billing, security
+updates, data retention, and incident response.
 
 ### Recommended
 
@@ -93,6 +140,23 @@ The DNS name must resolve to the EC2 public address before requesting a
 certificate. Do not put API keys in Git, shell history, screenshots, or the
 frontend environment. Any variable beginning with `NEXT_PUBLIC_` is visible
 to browser users and must not contain a secret.
+
+### Application preflight
+
+Before deploying, confirm:
+
+- The PR containing the deployment documentation and application changes has
+  been reviewed and merged, or the exact approved commit is recorded.
+- Backend dependencies install from `backend/requirements.txt`.
+- Frontend dependencies install with `npm ci` from the committed lockfile.
+- `config/monitored_locations.json` is available on the host and contains
+  only approved operational locations.
+- Production provider accounts, quotas, attribution, and terms are approved.
+- `SIMULATION_MODE_ENABLED` is intentionally chosen for the environment.
+- A rollback commit and a configuration backup owner are known.
+
+Do not deploy `backend/docker-compose.yml` to production. It is a local
+development stack and starts local DynamoDB with development settings.
 
 ## 5. IAM Instance Profile
 
@@ -135,6 +199,17 @@ deployed with all tables already provisioned, remove `CreateTable` and keep
 schema changes in a controlled infrastructure process. If S3 is enabled by
 the application later, add access to only the configured bucket.
 
+Verify the role from the host before starting the backend:
+
+```bash
+aws sts get-caller-identity
+aws configure get region
+aws dynamodb list-tables --region <region>
+```
+
+The returned account and region must match the intended deployment. Do not
+work around an IAM error by adding administrator access.
+
 ## 6. Security Group
 
 Allow only:
@@ -148,7 +223,7 @@ Allow only:
 Do **not** expose ports 3000, 8000, 6379, or any database port publicly.
 Nginx and the system services communicate with these ports over loopback.
 
-## 7. Create the EC2 Host
+## 7. Create and Harden the EC2 Host
 
 Connect using the distribution-provided user and then install the required
 packages:
@@ -175,6 +250,14 @@ sudo chown -R climateops:climateops /opt/climateops
 sudo systemctl enable --now redis-server
 ```
 
+Apply the organization's Ubuntu hardening baseline, automatic security
+updates, time synchronization, and disk monitoring. Confirm the instance
+uses encrypted EBS storage and has an instance-recovery or backup policy.
+
+Prefer AWS Systems Manager Session Manager. If SSH is required, use a
+short-lived key, restrict port 22 to a fixed administrator IP, disable
+password authentication, and do not share private keys.
+
 Clone the repository as the deployment user:
 
 ```bash
@@ -185,7 +268,12 @@ sudo -u climateops git checkout main
 ```
 
 Use a reviewed release tag or a specific commit for production rather than
-deploying an unreviewed branch tip.
+deploying an unreviewed branch tip. Record the deployed commit:
+
+```bash
+git rev-parse HEAD
+git status --short
+```
 
 ## 8. Configure the Backend
 
@@ -264,6 +352,18 @@ Do not commit the production monitored-location file if it contains
 restricted operational information. Validate that it is present before
 starting the service.
 
+### DynamoDB initialization
+
+On the first production startup, the current backend calls
+`init_dynamodb()` and creates missing tables using on-demand billing. Confirm
+the six expected tables and their keys before accepting traffic. In a
+controlled production account, pre-create and review the tables, then remove
+`dynamodb:CreateTable` from the instance role.
+
+The application currently creates tables at startup; this is convenient for
+the initial deployment but should eventually be replaced by versioned
+infrastructure migrations before a multi-instance rollout.
+
 ## 9. Configure the Frontend
 
 Create the production environment file before building:
@@ -289,6 +389,10 @@ NEXT_PUBLIC_DEBUG=false
 The frontend appends `/api/...` to the REST base and constructs
 `/api/monitoring/ws/incidents` from the WebSocket base. Same-origin values
 avoid exposing the private backend port and simplify CORS.
+
+Do not set these values to `http://127.0.0.1:8000` or `ws://127.0.0.1:8000`
+in a production build. In a user's browser, `127.0.0.1` means the user's own
+computer, not the EC2 instance.
 
 Build and verify the production bundle:
 
@@ -372,6 +476,11 @@ sudo systemctl enable --now climateops-frontend
 sudo systemctl status climateops-backend climateops-frontend --no-pager
 ```
 
+The backend starts its monitoring loop during application startup. Run only
+one monitoring-loop instance in this single-EC2 topology. If the architecture
+is later scaled horizontally, move monitoring to a singleton worker or
+distributed scheduler before adding backend replicas.
+
 ## 11. Configure Nginx
 
 Create `/etc/nginx/sites-available/climateops`:
@@ -451,6 +560,20 @@ sudo systemctl reload nginx
 The WebSocket and SSE locations must remain before the general `/api/`
 location. The `proxy_pass` values intentionally preserve the request path.
 
+### Request routing checklist
+
+| Request | Expected upstream | Required behavior |
+|---|---|---|
+| `/` and frontend routes | `127.0.0.1:3000` | Next.js route refresh works |
+| `/api/*` | `127.0.0.1:8000` | REST response passes through |
+| `/health` | `127.0.0.1:8000` | Health response is reachable |
+| `/api/monitoring/ws/*` | `127.0.0.1:8000` | Upgrade headers are preserved |
+| `/api/monitoring/sse/*` | `127.0.0.1:8000` | Buffering is disabled |
+
+Do not add a trailing path to the `proxy_pass` values in this configuration
+without retesting route preservation. An incorrect trailing slash can change
+the path received by FastAPI.
+
 ## 12. Enable HTTPS
 
 After DNS points to the instance and HTTP works:
@@ -499,6 +622,24 @@ In a browser, verify:
 - Stale or unavailable provider data is shown explicitly.
 - No secret appears in HTML, browser environment output, or logs.
 
+### Integration acceptance criteria
+
+The deployment is ready for users only when all of these pass:
+
+- `GET /health` returns HTTP 200 through the public HTTPS hostname.
+- A location search reaches FastAPI through `/api`.
+- A climate-risk response loads in the frontend.
+- An explanation request reaches the configured AI provider.
+- The emergency view opens a WebSocket and reconnects after disconnect.
+- The SSE endpoint streams without Nginx buffering.
+- Browser refresh works on `/climate/<locationId>`, `/emergency`, and
+  `/simulate`.
+- The browser console contains no mixed-content, CORS, or failed WebSocket
+  errors.
+- Backend logs show production configuration and no missing required setting.
+- DynamoDB contains the expected records after a verified application flow.
+- Monitoring freshness and incident status are visible to the operator.
+
 ## 14. Updates and Rollback
 
 Back up configuration before updating:
@@ -528,6 +669,11 @@ sudo systemctl restart climateops-backend climateops-frontend
 sudo systemctl --no-pager status climateops-backend climateops-frontend
 ```
 
+For a safer release, build the frontend before stopping the running service,
+validate the backend dependencies first, and restart services only after the
+new build succeeds. Never overwrite `.env`, certificates, or operational
+configuration during a source update.
+
 If the release fails, check out the previous known-good commit, rebuild the
 frontend if necessary, and restart both services. Do not delete DynamoDB
 tables as part of an application rollback.
@@ -551,6 +697,29 @@ locations unless there is a documented operational need.
 Configure alerts for repeated backend restarts, disk usage, failed health
 checks, provider outage, stale monitoring data, and certificate renewal
 failure. Keep a runbook with an owner and escalation path.
+
+### Backup and recovery
+
+- DynamoDB point-in-time recovery and deletion protection should be reviewed
+  and enabled according to the data owner's retention policy.
+- EBS snapshots must be encrypted and tested by restoring to a temporary
+  instance.
+- Keep a secure backup of service configuration without storing secrets in
+  Git.
+- Test recovery of the application, DNS, certificates, and monitored-location
+  configuration separately.
+- Record the maximum acceptable data loss and recovery time for incidents.
+
+### Incident response
+
+1. Confirm whether the issue affects frontend, backend, Nginx, AWS, or an
+   external data provider.
+2. Check public health, systemd status, Nginx logs, and backend logs.
+3. If risk data is stale or unreliable, communicate that limitation and
+   direct urgent decisions to official authorities.
+4. Roll back to the last known-good application commit when appropriate.
+5. Preserve timestamps and relevant logs, remove secrets, and document the
+   cause and corrective action.
 
 ## 16. Common Problems
 
@@ -615,3 +784,31 @@ sudo journalctl -u climateops-frontend -n 100 --no-pager
 - [ ] Manual QA from [docs/manual-qa.md](./docs/manual-qa.md) has passed.
 - [ ] Risk and emergency behavior has been reviewed using
   [docs/risk-and-safety.md](./docs/risk-and-safety.md).
+
+## 18. Deployment Record
+
+Complete this record outside the public repository or commit only the
+non-sensitive fields:
+
+```text
+Deployment date:
+AWS account:
+AWS Region:
+EC2 instance ID:
+AMI/version:
+Public hostname:
+Deployed commit:
+Backend service status:
+Frontend service status:
+Nginx configuration version:
+TLS expiry:
+DynamoDB tables verified:
+Redis status:
+Monitoring owner:
+Rollback commit:
+Last manual QA run:
+Known limitations:
+```
+
+Never record passwords, private keys, API keys, session tokens, or complete
+`.env` contents in this file or in an issue or pull request.
