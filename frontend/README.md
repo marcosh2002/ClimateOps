@@ -145,9 +145,14 @@ Slide-over panel with dual gauges, live sliders, comparison table, AI explanatio
 ### EmergencyMap
 MapLibre GL map with pulsing organic incident markers, time scrubber.
 
-## WebSocket Integration
+## Real-time Incident Updates
 
-Real-time updates via WebSocket at `/api/monitoring/ws/incidents`:
+The command center connects to the Server-Sent Events stream at
+`/api/monitoring/sse/incidents`. The currently deployed backend returns HTTP
+404 for its WebSocket upgrade endpoint, so SSE is used directly to avoid a
+failed handshake while still receiving live incident updates.
+
+Messages use these incident event types:
 
 ```typescript
 // Message types

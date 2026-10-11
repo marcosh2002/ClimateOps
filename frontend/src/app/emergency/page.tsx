@@ -52,60 +52,13 @@ export default function EmergencyPage() {
   const [showMap, setShowMap] = useState(true);
   const hasScannedOnEntry = useRef(false);
 
-  // WebSocket connection
+  // Use SSE until the deployed API accepts WebSocket upgrades.
   useEffect(() => {
-    const wsBase = new URL(API_BASE);
-    wsBase.protocol = wsBase.protocol === 'https:' || wsBase.protocol === 'wss:' ? 'wss:' : 'ws:';
-    wsBase.pathname = `${wsBase.pathname
-      .replace(/\/+$/, '')
-      .replace(/\/api(?:\/monitoring)?$/, '')}/api/monitoring/ws/incidents`;
-    wsBase.search = '';
-    wsBase.hash = '';
-    const wsUrl = wsBase.toString();
-    let ws: WebSocket;
-    let reconnectTimeout: ReturnType<typeof setTimeout>;
+    const sseUrl = new URL(`${API_BASE.replace(/\/+$/, '')}/monitoring/sse/incidents`);
+    let eventSource: EventSource;
     let disposed = false;
 
-    const connect = () => {
-      if (disposed) return;
-      try {
-        ws = new WebSocket(wsUrl);
-
-        ws.onopen = () => {
-          if (disposed) {
-            ws.close();
-            return;
-          }
-          setConnected(true);
-          console.log('WebSocket connected');
-        };
-
-        ws.onmessage = (event) => {
-          try {
-            const msg = JSON.parse(event.data);
-            handleWebSocketMessage(msg);
-          } catch (e) {
-            console.error('WS message parse error:', e);
-          }
-        };
-
-        ws.onclose = () => {
-          if (disposed) return;
-          setConnected(false);
-          console.log('WebSocket disconnected, reconnecting in 5s...');
-          reconnectTimeout = setTimeout(connect, 5000);
-        };
-
-        ws.onerror = (err) => {
-          if (!disposed) console.error('WebSocket error:', err);
-        };
-      } catch (e) {
-        console.error('WebSocket connection failed:', e);
-        if (!disposed) reconnectTimeout = setTimeout(connect, 5000);
-      }
-    };
-
-    const handleWebSocketMessage = (msg: any) => {
+    const handleLiveMessage = (msg: any) => {
       switch (msg.type) {
         case 'incident_created':
           addIncident(msg.data);
@@ -124,17 +77,28 @@ export default function EmergencyPage() {
           setSummary(msg.data);
           break;
         case 'risk_update':
-          // Handle risk updates if needed
           break;
       }
     };
 
-    connect();
+    eventSource = new EventSource(sseUrl);
+    eventSource.onopen = () => {
+      if (!disposed) setConnected(true);
+    };
+    eventSource.onmessage = (event) => {
+      try {
+        handleLiveMessage(JSON.parse(event.data));
+      } catch (error) {
+        console.error('SSE message parse error:', error);
+      }
+    };
+    eventSource.onerror = () => {
+      if (!disposed) setConnected(false);
+    };
 
     return () => {
       disposed = true;
-      clearTimeout(reconnectTimeout);
-      if (ws?.readyState === WebSocket.OPEN) ws.close();
+      eventSource.close();
     };
   }, [addIncident, updateIncident, removeIncident, setConnected, setSummary, selectedIncident, setSelectedIncident, setIncidentDetailOpen]);
 
