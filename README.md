@@ -25,8 +25,9 @@ Monitor a configured set of Indian cities on a map and in an incident list.
 The backend runs monitoring cycles at the configured interval and the dashboard
 can also request an immediate scan. Heat, flood, water-stress, and drought
 incidents are detected at a risk score of **20% or higher**. Heavy-rain
-incidents use an observation-based rainfall trigger. Active incidents are
-published to connected clients over WebSocket or Server-Sent Events (SSE).
+incidents are triggered by an observed rainfall value of at least **100 mm**
+(at least **150 mm** is marked critical). Active incidents are published to
+connected clients over WebSocket or Server-Sent Events (SSE).
 
 The **Demo preview** is separate from live monitoring: its illustrative cards
 are synthetic, marked as demo, and are not persisted as live incidents.
@@ -143,8 +144,9 @@ Start the API from the `backend` directory:
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-The backend uses SQLite in local development. On startup, it also starts the
-background monitoring service. Its interval can be changed with
+The backend uses SQLite in development (and when `AWS_DYNAMODB_ENDPOINT` is
+configured); otherwise, it initializes DynamoDB. On startup, it also starts
+the background monitoring service. Its interval can be changed with
 `MONITORING_INTERVAL_MINUTES`; monitored cities are defined in
 `backend/config/monitored_locations.json`.
 
@@ -166,8 +168,16 @@ NEXT_PUBLIC_WS_URL=ws://localhost:8000
 NEXT_PUBLIC_SIMULATION_MODE=true
 ```
 
-`NEXT_PUBLIC_WS_URL` is the backend base URL; do not append `/api` to it.
-Start the frontend:
+For a local frontend connected to a deployed backend, set both URLs to that
+backend instead. The base URL can include its `/api/` mount; the client avoids
+duplicating the prefix:
+
+```dotenv
+NEXT_PUBLIC_API_URL=https://your-backend.example.com/api/
+NEXT_PUBLIC_WS_URL=wss://your-backend.example.com/api/
+```
+
+Use `wss://` for a backend served over HTTPS. Start the frontend:
 
 ```powershell
 npm run dev
@@ -255,10 +265,10 @@ Common backend settings:
 | `MONITORED_LOCATIONS_CONFIG` | Path to monitored city configuration |
 | `SIMULATION_MODE_ENABLED` | Enables simulation features |
 
-Local development uses SQLite. Staging and production use DynamoDB unless the
-backend is explicitly configured to use a local DynamoDB endpoint. In deployed
-AWS environments, prefer an IAM role with least-privilege permissions instead
-of long-lived access keys.
+Development uses SQLite. Other environments initialize DynamoDB unless
+`AWS_DYNAMODB_ENDPOINT` is set, in which case the current backend selects
+SQLite. In deployed AWS environments, prefer an IAM role with least-privilege
+permissions instead of long-lived access keys.
 
 ## Running checks
 
@@ -285,7 +295,8 @@ The frontend test command may report that no test files are currently present.
 - Live incident cards are created from observations and risk calculations; the
   dashboard does not invent a live alert when current data is below a trigger.
 - The current threshold for heat, flood, water stress, and drought incidents is
-  20%. Heavy rain uses its own rainfall-based trigger.
+  20%. Heavy rain is triggered at 100 mm observed rainfall, with 150 mm marked
+  critical.
 - Demo-preview incidents are synthetic and intentionally separate from the
   active incident API.
 - AI-generated guidance is informational and may be incomplete or incorrect.
@@ -293,12 +304,11 @@ The frontend test command may report that no test files are currently present.
 - Provider outages, API quotas, network access, or missing credentials can
   affect search and observation freshness.
 
-## License and attribution
+## Data providers and attribution
 
-This repository's existing component READMEs reference the MIT license; confirm
-the repository's license file before redistributing the project. ClimateOps
-uses external data and services whose availability and terms are controlled by
-their respective providers.
+ClimateOps integrates with external data and AI services. Their availability,
+coverage, attribution requirements, and terms are controlled by the respective
+providers. Review each provider's terms before deployment or redistribution.
 
 ## Project
 

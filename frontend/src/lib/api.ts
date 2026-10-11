@@ -16,9 +16,19 @@ import type {
 } from '@/types';
 
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').replace(/\/+$/, '');
+const API_BASE_HAS_API_PREFIX = /\/api$/i.test(API_BASE);
+
+function resolveApiUrl(endpoint: string): string {
+  const normalizedEndpoint =
+    API_BASE_HAS_API_PREFIX && endpoint.startsWith('/api/')
+      ? endpoint.slice('/api'.length)
+      : endpoint;
+
+  return `${API_BASE}${normalizedEndpoint}`;
+}
 
 async function fetchJson<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE}${endpoint}`, {
+  const response = await fetch(resolveApiUrl(endpoint), {
     headers: {
       'Content-Type': 'application/json',
       ...options?.headers,

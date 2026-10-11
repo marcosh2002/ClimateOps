@@ -81,11 +81,36 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(climate.router, prefix="/api", tags=["Climate Intelligence"])
-app.include_router(simulation.router, prefix="/api/climate", tags=["Simulation"])
-app.include_router(simulation.simulation_lookup_router, prefix="/api", tags=["Simulation"])
-app.include_router(incidents.router, prefix="/api/incidents", tags=["Emergency Ops"])
-app.include_router(monitoring.router, prefix="/api/monitoring", tags=["Live Monitoring"])
+
+# API Routers
+app.include_router(
+    climate.router,
+    tags=["Climate Intelligence"],
+)
+
+app.include_router(
+    simulation.router,
+    prefix="/climate",
+    tags=["Simulation"],
+)
+
+app.include_router(
+    simulation.simulation_lookup_router,
+    tags=["Simulation"],
+)
+
+app.include_router(
+    incidents.router,
+    prefix="/incidents",
+    tags=["Emergency Ops"],
+)
+
+app.include_router(
+    monitoring.router,
+    prefix="/monitoring",
+    tags=["Live Monitoring"],
+)
+
 
 
 @app.get("/health", tags=["Health"])
