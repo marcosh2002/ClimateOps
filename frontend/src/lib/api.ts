@@ -15,7 +15,7 @@ import type {
   SimulationResponse,
 } from '@/types';
 
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').replace(/\/+$/, '');
+export const API_BASE = 'https://13.48.67.243.sslip.io/api';
 const API_BASE_HAS_API_PREFIX = /\/api$/i.test(API_BASE);
 
 function resolveApiUrl(endpoint: string): string {

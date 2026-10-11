@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Search, Filter, RefreshCw, Wifi, WifiOff, MapPin, AlertTriangle, Clock, TrendingUp, ChevronLeft, ChevronRight, FlaskConical, ScanLine } from 'lucide-react';
 import { useIncidentStore, useLocationStore, useUIStore } from '@/store';
-import { api } from '@/lib/api';
+import { API_BASE, api } from '@/lib/api';
 import type { Incident, IncidentObservation, IncidentSummaryResponse } from '@/types';
 
 const INCIDENT_TYPE_FILTERS = ['ALL', 'HEAT', 'FLOOD', 'HEAVY_RAIN', 'WATER_STRESS', 'DROUGHT'] as const;
@@ -54,7 +54,7 @@ export default function EmergencyPage() {
 
   // WebSocket connection
   useEffect(() => {
-    const wsBase = new URL(process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000');
+    const wsBase = new URL(API_BASE);
     wsBase.protocol = wsBase.protocol === 'https:' || wsBase.protocol === 'wss:' ? 'wss:' : 'ws:';
     wsBase.pathname = `${wsBase.pathname
       .replace(/\/+$/, '')

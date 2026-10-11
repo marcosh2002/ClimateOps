@@ -27,19 +27,24 @@ Next.js 14 frontend for ClimateOps — Climate Intelligence & Emergency Response
 ### Prerequisites
 
 - Node.js 20+
-- Backend running on `http://localhost:8000`
+- Network access to the configured ClimateOps backend
 
 ### Installation
 
 ```bash
 cd frontend
 npm install
-cp .env.example .env.local
-# Edit .env.local with your API URL
 npm run dev
 ```
 
 Open http://localhost:3000
+
+The frontend API client uses `https://13.48.67.243.sslip.io/api` as its backend
+base URL. The command-center WebSocket URL is derived from the same base URL
+using secure WebSockets. To point the frontend at another backend, change
+`API_BASE` in `src/lib/api.ts` and restart the development server or rebuild
+the production frontend. The backend must allow the frontend origin through
+CORS.
 
 ### Development Commands
 
@@ -173,11 +178,9 @@ type WSMessage =
 
 ## Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `NEXT_PUBLIC_API_URL` | Backend API base URL | `http://localhost:8000` |
-| `NEXT_PUBLIC_WS_URL` | WebSocket URL | `ws://localhost:8000` |
-| `NEXT_PUBLIC_SIMULATION_MODE` | Enable simulation features | `true` |
+The backend URLs are configured directly in `src/lib/api.ts`; no frontend
+`.env.local` file is needed for API or WebSocket configuration. Optional
+analytics and feature flags are listed in `.env.example`.
 
 ## Deployment
 
@@ -187,7 +190,7 @@ type WSMessage =
 vercel --prod
 ```
 
-Set environment variables in Vercel dashboard.
+The configured backend base URL is included in the frontend build.
 
 ### Docker
 

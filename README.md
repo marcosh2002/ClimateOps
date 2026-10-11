@@ -157,27 +157,12 @@ In another PowerShell terminal:
 ```powershell
 cd frontend
 npm install
-Copy-Item .env.example .env.local
 ```
 
-The local defaults in `frontend/.env.local` are:
-
-```dotenv
-NEXT_PUBLIC_API_URL=http://localhost:8000
-NEXT_PUBLIC_WS_URL=ws://localhost:8000
-NEXT_PUBLIC_SIMULATION_MODE=true
-```
-
-For a local frontend connected to a deployed backend, set both URLs to that
-backend instead. The base URL can include its `/api/` mount; the client avoids
-duplicating the prefix:
-
-```dotenv
-NEXT_PUBLIC_API_URL=https://your-backend.example.com/api/
-NEXT_PUBLIC_WS_URL=wss://your-backend.example.com/api/
-```
-
-Use `wss://` for a backend served over HTTPS. Start the frontend:
+The frontend's HTTP API and WebSocket client use the deployed backend URL
+configured in `frontend/src/lib/api.ts`. No frontend `.env.local` file is
+required for backend connectivity. To change the backend, update that
+`API_BASE` constant and rebuild/restart the frontend. Start the frontend:
 
 ```powershell
 npm run dev
